@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Interview Coach</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<header class="topbar hidden" id="topbar">
+  <div class="brand">AI Interview Coach</div>
+  <div class="steps" id="stepIndicator">
+    <span class="step active" data-step="upload">1. Upload</span>
+    <span class="step" data-step="results">2. Analysis</span>
+    <span class="step" data-step="mode">3. Choose Mode</span>
+    <span class="step" data-step="interview">4. Interview</span>
+    <span class="step" data-step="summary">5. Summary</span>
+  </div>
+  <div class="topbar-user hidden" id="topbarUser">
+    <span class="badge" id="topbarStreak">🔥 0</span>
+    <span class="topbar-username" id="topbarUsername"></span>
+    <button class="btn secondary small" id="topbarProfileBtn">Profile</button>
+    <button class="btn secondary small" id="topbarLogoutBtn">Log Out</button>
+  </div>
+</header>
+
+<main class="container">
+
+  <!-- STEP 0: COVER SCREEN -->
+  <section id="screen-cover" class="screen active">
+    <div class="cover-radar" aria-hidden="true"><div class="cover-sweep"></div></div>
+    <div class="cover-wrap">
+      <div class="cover-wordmark">Resume <em>Analyzer</em></div>
+      <div class="cover-cta-row" id="coverCta">
+        <button class="btn primary" id="enterAppBtn">Begin Analysis →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- AUTH: LOGIN / SIGN UP (gates entry to the app) -->
+  <section id="screen-auth" class="screen">
+    <div class="auth-wrap">
+      <div class="card auth-card">
+        <h1 style="margin-top:0;">Practice makes prepared</h1>
+        <p class="subtitle">Log in or create an account to track your streaks, medals, and interview history.</p>
+
+        <div class="auth-tabs">
+          <button type="button" class="auth-tab active" data-tab="login">Log In</button>
+          <button type="button" class="auth-tab" data-tab="signup">Sign Up</button>
+        </div>
+
+        <form id="loginForm" class="auth-form">
+          <label class="field-label">Username or email</label>
+          <input type="text" id="loginIdentifier" autocomplete="username" required>
+          <label class="field-label" style="margin-top:14px;">Password</label>
+          <input type="password" id="loginPassword" autocomplete="current-password" required>
+          <button type="submit" class="btn primary auth-submit">Log In</button>
+          <p class="error-text" id="loginError"></p>
+        </form>
+
+        <form id="signupForm" class="auth-form hidden">
+          <label class="field-label">Username</label>
+          <input type="text" id="signupUsername" autocomplete="username" required>
+          <label class="field-label" style="margin-top:14px;">Email</label>
+          <input type="email" id="signupEmail" autocomplete="email" required>
+          <label class="field-label" style="margin-top:14px;">Password</label>
+          <input type="password" id="signupPassword" autocomplete="new-password" required>
+          <button type="submit" class="btn primary auth-submit">Create Account</button>
+          <p class="error-text" id="signupError"></p>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROFILE: hub shown right after login, and reachable any time -->
+  <section id="screen-profile" class="screen">
+    <h1>Welcome back, <span id="profileUsername">-</span></h1>
+    <p class="subtitle">Your practice streak, medals, and progress.</p>
+
+    <div class="two-col">
+      <div class="card streak-card">
+        <div class="streak-flame" id="streakFlame">🔥</div>
+        <div class="big-stat" id="currentStreakNum">0</div>
+        <p class="detail-text">day streak · longest <span id="longestStreakNum">0</span></p>
+      </div>
+      <div class="card">
+        <h3>Medals</h3>
+        <div id="medalGrid" class="medal-grid"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Recent Sessions</h3>
+      <ul id="profileHistory"><li class="detail-text">No sessions yet — start your first interview below.</li></ul>
+    </div>
+
+    <div class="profile-actions">
+      <button class="btn primary" id="startNewInterviewBtn">Start New Interview →</button>
+    </div>
+  </section>
+
+  <!-- STEP 1: UPLOAD -->
+  <section id="screen-upload" class="screen">
+    <h1>Analyze your Resume against a Job Description</h1>
+    <p class="subtitle">Everything runs locally on your machine — no data leaves your computer.</p>
+
+    <div class="card">
+      <label class="field-label">Upload your resume (PDF, DOCX, or TXT)</label>
+      <input type="file" id="resumeFile" accept=".pdf,.docx,.txt">
+
+      <div class="or-divider">or paste resume text manually</div>
+      <textarea id="resumeText" rows="6" placeholder="Paste your resume text here..."></textarea>
+
+      <label class="field-label" style="margin-top:20px;">Paste the Job Description</label>
+      <textarea id="jdText" rows="6" placeholder="Paste the job description here..."></textarea>
+
+      <button id="analyzeBtn" class="btn primary">Analyze Match</button>
+      <p id="uploadError" class="error-text"></p>
+    </div>
+  </section>
+
+  <!-- STEP 2: ANALYSIS RESULTS -->
+  <section id="screen-results" class="screen">
+    <h1>Match Analysis</h1>
+    <p class="subtitle">Comprehensive evaluation of skills and contextual formatting alignment.</p>
+
+    <!-- Score Card & Detailed Breakdown -->
+    <div class="two-col">
+      <div class="card score-card" style="display: flex; justify-content: center; flex-direction: column; align-items: center; text-align: center;">
+        <div class="score-circle-wrap">
+          <svg viewBox="0 0 120 120" class="score-circle">
+            <circle cx="60" cy="60" r="52" class="score-bg"></circle>
+            <circle cx="60" cy="60" r="52" class="score-fg" id="scoreArc"></circle>
+          </svg>
+          <div class="score-number" id="scoreNumber">0%</div>
+        </div>
+        <h3 style="margin-top: 14px; margin-bottom: 2px;">Overall Match Score</h3>
+        <p style="font-size: 12px; color: var(--muted); margin: 0;">Weighted blend of all components</p>
+      </div>
+
+      <div class="card">
+        <h3>Score Breakdown Formula</h3>
+        <div style="margin-top: 16px;">
+          <div class="metric-row">
+            <span class="metric-name">Skill Match (70% weight)</span>
+            <span class="metric-value" id="breakdownSkillScore">0%</span>
+          </div>
+          <div class="progress-bar-container">
+            <div class="progress-bar" id="breakdownSkillBar" style="width: 0%;"></div>
+          </div>
+
+          <div class="metric-row">
+            <span class="metric-name">Contextual Similarity (30% weight)</span>
+            <span class="metric-value" id="breakdownSemanticScore">0%</span>
+          </div>
+          <div class="progress-bar-container">
+            <div class="progress-bar success" id="breakdownSemanticBar" style="width: 0%;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Matched Skills Split & Categorized Gaps -->
+    <div class="two-col">
+      <div class="card">
+        <h3>Matched Skills</h3>
+        
+        <div class="priority-section" style="margin-top: 14px;">
+          <div class="category-title">Technical Skills</div>
+          <div id="matchedTechSkills" class="chip-list"></div>
+        </div>
+        
+        <div class="priority-section">
+          <div class="category-title">Soft Skills / Methodologies</div>
+          <div id="matchedSoftSkills" class="chip-list"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Weaknesses / Missing Skills</h3>
+        
+        <div class="priority-section" style="margin-top: 14px;">
+          <div class="priority-title critical">Critical Missing</div>
+          <div id="criticalMissing" class="chip-list"></div>
+        </div>
+
+        <div class="priority-section">
+          <div class="priority-title important">Important Missing</div>
+          <div id="importantMissing" class="chip-list"></div>
+        </div>
+
+        <div class="priority-section">
+          <div class="priority-title" style="color:#b8860b;">Worth Clarifying (possibly implied, not stated)</div>
+          <div id="worthClarifying" class="chip-list"></div>
+        </div>
+
+        <div class="priority-section">
+          <div class="priority-title nice">Nice-to-Have / Soft Gaps</div>
+          <div id="niceMissing" class="chip-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Keyword Density & ATS Compatibility -->
+    <div class="two-col">
+      <div class="card">
+        <h3>Keyword Density Analysis</h3>
+        <p class="detail-text">Occurrences of matched keywords in your resume. Strong density shows deep competence.</p>
+        <div class="density-grid" id="keywordDensityGrid"></div>
+      </div>
+
+      <div class="card">
+        <h3>ATS Formatting Compatibility</h3>
+        <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 16px;">
+          <div class="big-stat" id="atsCompatibilityScore" style="font-size: 48px;">0%</div>
+          <p class="detail-text">Overall formatting and parser readability score based on industry standards.</p>
+        </div>
+        
+        <div id="atsChecklist">
+          <div class="checklist-item">
+            <span class="check-icon" id="checkSearchable">-</span>
+            <span>Searchable PDF/DOCX Text Format</span>
+          </div>
+          <div class="checklist-item">
+            <span class="check-icon" id="checkHeadings">-</span>
+            <span>Standard Headings Present (Experience, Education, Skills)</span>
+          </div>
+          <div class="checklist-item">
+            <span class="check-icon" id="checkTables">-</span>
+            <span>No Complex Tables or Formatting Hazards</span>
+          </div>
+          <div class="checklist-item">
+            <span class="check-icon" id="checkParagraphs">-</span>
+            <span>Readable Line Lengths & Layout Structure</span>
+          </div>
+          <div class="checklist-item">
+            <span class="check-icon" id="checkLength">-</span>
+            <span>Appropriate Resume Length (300-900 words)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Resume Improvement Notes -->
+    <div class="card">
+      <h3>Resume Improvement Notes</h3>
+      <ul id="qualityNotes" style="margin-top: 12px;"></ul>
+    </div>
+
+    <button class="btn primary" id="goToModeBtn">Continue to Interview Setup →</button>
+  </section>
+
+  <!-- STEP 3: MODE SELECT -->
+  <section id="screen-mode" class="screen">
+    <h1>Choose Interview Mode</h1>
+    <div class="two-col">
+      <div class="card mode-card">
+        <h2>Practice Interview</h2>
+        <p>Relaxed pace. See tips and feedback after each question. Good for preparation.</p>
+        <button class="btn secondary" data-mode="practice">Start Practice</button>
+      </div>
+      <div class="card mode-card">
+        <h2>Mock Interview</h2>
+        <p>Simulates a real interview. Question difficulty adapts live to your answers, and full feedback is shown at the end.</p>
+        <button class="btn primary" data-mode="mock">Start Mock Interview</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP 4: INTERVIEW -->
+  <section id="screen-interview" class="screen">
+    <div class="interview-layout">
+      <div class="video-panel">
+        <video id="webcam" autoplay muted playsinline></video>
+        <canvas id="overlay"></canvas>
+        <div class="live-badges">
+          <span id="emotionBadge" class="badge">Detecting...</span>
+          <span id="micBadge" class="badge">Listening</span>
+          <span id="difficultyBadge" class="badge difficulty-medium">medium</span>
+        </div>
+      </div>
+
+      <div class="qa-panel">
+        <div class="qa-top">
+          <span id="questionCounter">Question 1/6</span>
+          <span id="timer">00:00</span>
+        </div>
+        <h2 id="questionText">Loading question...</h2>
+        <div class="transcript-box">
+          <label class="field-label">Live transcript</label>
+          <div id="transcriptBox" class="transcript"></div>
+        </div>
+        <div id="practiceFeedback" class="feedback-box hidden"></div>
+        <div class="qa-actions">
+          <button class="btn secondary" id="skipBtn">Skip / Next Question →</button>
+          <button class="btn danger" id="endInterviewBtn">End Interview</button>
+        </div>
+        <p class="hint">If you stay silent too long, the question will auto-advance.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP 5: SUMMARY -->
+  <section id="screen-summary" class="screen">
+    <h1>Interview Summary</h1>
+
+    <div id="streakBanner" class="card streak-banner hidden"></div>
+    <div id="medalBanner" class="card medal-banner hidden"></div>
+
+    <div class="two-col">
+      <div class="card">
+        <h3>Answer Quality</h3>
+        <div id="answerScore" class="big-stat">-</div>
+        <p id="answerScoreLabel"></p>
+      </div>
+      <div class="card">
+        <h3>Emotional Engagement</h3>
+        <div id="emotionScore" class="big-stat">-</div>
+        <p id="emotionScoreLabel"></p>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div class="card">
+        <h3>Eye Contact / Camera Presence</h3>
+        <div id="eyeContactScore" class="big-stat">-</div>
+      </div>
+      <div class="card">
+        <h3>⏱️ Speaking &amp; Hesitation</h3>
+        <ul id="speechStats"></ul>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Per-Question Breakdown</h3>
+      <div id="questionBreakdown"></div>
+    </div>
+
+    <div class="card">
+      <h3>Personalized Recommendations</h3>
+      <ul id="recommendationsList"></ul>
+    </div>
+
+    <div class="card">
+      <h3>Fairness &amp; Bias Safeguards</h3>
+      <p class="detail-text">How your score was (and wasn't) computed:</p>
+      <ul id="fairnessNotes"></ul>
+    </div>
+
+    <div class="card">
+      <h3>Your Progress Over Time</h3>
+      <ul id="progressHistory"></ul>
+    </div>
+
+    <div class="profile-actions">
+      <button class="btn secondary" id="backToProfileBtn">← Back to Profile</button>
+      <button class="btn primary" id="restartBtn">Start Another Interview</button>
+    </div>
+  </section>
+
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+<script src="{{ url_for('static', filename='js/cover.js') }}"></script>
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+<script src="{{ url_for('static', filename='js/auth.js') }}"></script>
+<script src="{{ url_for('static', filename='js/interview.js') }}"></script>
+</body>
+</html>
