@@ -1,0 +1,39 @@
+/* Candidate side: My Resume, Jobs board, My Applications.
+   Reuses the theme variables defined in style.css. */
+
+.cand-input {
+  width: 100%; background: var(--panel-light); border: 1px solid var(--border-strong); color: var(--text);
+  border-radius: 8px; padding: 10px 12px; font-family: var(--font-body); font-size: 14px; margin-top: 6px;
+}
+.cand-input:focus { outline: none; border-color: var(--jade); }
+
+.cand-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+@media (max-width: 800px) { .cand-grid { grid-template-columns: 1fr; } }
+.cand-field { margin-bottom: 16px; }
+.cand-grid .cand-field { margin-bottom: 0; }
+.cand-field textarea { margin-top: 6px; }
+
+.cand-actions { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-top: 16px; }
+.cand-status { font-size: 13px; font-family: var(--font-mono); }
+.cand-status.ok { color: var(--success); }
+.cand-status.err { color: var(--danger); }
+
+.job-toolbar { display: flex; gap: 10px; margin-bottom: 20px; align-items: stretch; }
+.job-toolbar .cand-input { margin-top: 0; }
+/* style.css gives .btn a top margin; drop it inside our flex rows so items line up */
+.job-toolbar .btn, .cand-actions .btn, .job-actions .btn { margin-top: 0; }
+
+.job-card h3 { margin: 0 0 2px; }
+.job-meta { color: var(--muted); font-size: 13px; margin: 0 0 10px; }
+.job-desc { font-size: 14px; line-height: 1.5; white-space: pre-line; margin: 10px 0; }
+.job-desc.clamped { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.job-link { background: none; border: none; color: var(--jade); cursor: pointer; padding: 0; font-size: 13px; font-family: var(--font-body); }
+.job-actions { margin-top: 14px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.job-apply-box { margin-top: 12px; }
+.job-apply-box textarea { margin-top: 6px; }
+.job-applied { color: var(--success); font-family: var(--font-mono); font-size: 13px; }
+
+.app-list { list-style: none; padding: 0; margin: 12px 0 0; }
+.app-list li { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+.app-list li:last-child { border-bottom: none; }
+.app-status { font-family: var(--font-mono); font-size: 12px; text-transform: uppercase; color: var(--jade); }
